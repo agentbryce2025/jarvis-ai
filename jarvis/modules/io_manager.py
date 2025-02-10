@@ -4,7 +4,7 @@ Handles different types of inputs and outputs including text, voice, and potenti
 """
 
 import logging
-from typing import Dict, Any, Optional, Union
+from typing import Dict, List, Any, Optional, Union
 from pathlib import Path
 import asyncio
 import json

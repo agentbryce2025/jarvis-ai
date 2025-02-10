@@ -4,6 +4,7 @@ Implements ReAct-based planning with chain-of-thought reasoning and self-reflect
 """
 
 import logging
+import os
 from typing import Dict, List, Any, Optional, TypedDict, Literal
 from dataclasses import dataclass
 from enum import Enum
@@ -28,7 +29,7 @@ class TaskState(TypedDict):
 from langgraph.graph import StateGraph
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
-from langchain_community.llms import OpenAI
+from langchain_openai import ChatOpenAI
 
 @dataclass
 class TaskStep:
@@ -50,7 +51,8 @@ class TaskManager:
     def __init__(self, config: Dict[str, Any]):
         self.config = config
         self.logger = logging.getLogger(__name__)
-        self.llm = OpenAI(openai_api_key="dummy-key")  # Initialize language model
+        api_key = os.environ.get("OPENAI_API_KEY", "dummy-key")
+        self.llm = ChatOpenAI(model_name="gpt-4-turbo-preview", temperature=0.7, openai_api_key=api_key)  # Initialize language model
         self.state_graph = self._initialize_state_graph()
         self.active_tasks: Dict[str, List[TaskStep]] = {}
         

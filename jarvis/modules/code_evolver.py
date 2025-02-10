@@ -9,7 +9,7 @@ from pathlib import Path
 import ast
 import inspect
 import astroid
-from pylint import epylint
+from pylint.lint import Run as PylintRun
 import git
 import tempfile
 import subprocess
@@ -204,16 +204,10 @@ class CodeEvolver:
             temp_file.flush()
             
             # Run pylint
-            (pylint_stdout, pylint_stderr) = epylint.py_run(
-                return_std=True,
-                command_options=[temp_file.name]
-            )
-            
-            # Check results
-            if pylint_stderr.getvalue():
-                raise ValidationFailure(
-                    f"Static analysis failed: {pylint_stderr.getvalue()}"
-                )
+            try:
+                PylintRun([temp_file.name], do_exit=False)
+            except Exception as e:
+                raise ValidationFailure(f"Static analysis failed: {e}")
                 
     def _create_backup(self, file_path: Path) -> Path:
         """Create backup of file"""

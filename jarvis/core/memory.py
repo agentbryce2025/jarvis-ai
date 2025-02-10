@@ -15,11 +15,11 @@ from sqlalchemy import create_engine
 
 class MemoryCore:
     def __init__(self, config: Dict[str, Any]):
+        self.logger = logging.getLogger(__name__)
         self.config = config
         self.short_term = self._init_short_term()
         self.mid_term = self._init_mid_term()
         self.long_term = self._init_long_term()
-        self.logger = logging.getLogger(__name__)
 
     def _init_short_term(self) -> redis.Redis:
         """Initialize Redis for short-term memory"""
@@ -35,9 +35,11 @@ class MemoryCore:
         """Initialize ChromaDB for mid-term memory"""
         try:
             client = chromadb.Client()
-            self.mid_term_collection = client.create_collection(
-                self.config["mid_term"]["collection"]
-            )
+            collection_name = self.config["mid_term"]["collection"]
+            try:
+                self.mid_term_collection = client.create_collection(collection_name)
+            except Exception:
+                self.mid_term_collection = client.get_collection(collection_name)
             return client
         except Exception as e:
             self.logger.error(f"Failed to initialize ChromaDB: {e}")
