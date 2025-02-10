@@ -33,12 +33,22 @@ class TimeManager:
                 timezone=self.timezone
             )
             
-            self.scheduler.start()
+            # Don't start the scheduler during initialization
             self.logger.info("Scheduler initialized successfully")
             
         except Exception as e:
             self.logger.error(f"Failed to initialize scheduler: {e}")
             raise
+            
+    def start(self):
+        """Start the scheduler"""
+        if not self.scheduler.running:
+            self.scheduler.start()
+            
+    def shutdown(self):
+        """Stop the scheduler"""
+        if self.scheduler.running:
+            self.scheduler.shutdown()
             
     async def schedule_task(self,
                           task_func: callable,
