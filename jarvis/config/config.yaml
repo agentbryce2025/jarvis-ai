@@ -1,0 +1,56 @@
+system:
+  name: "JARVIS"
+  version: "1.0.0"
+  description: "Advanced AI Assistant System"
+
+memory:
+  short_term:
+    type: "redis"
+    ttl: 1800  # 30 minutes
+  mid_term:
+    type: "chromadb"
+    collection: "recent_interactions"
+    retention_days: 30
+  long_term:
+    type: "postgresql"
+    table: "historical_memory"
+
+personality:
+  default:
+    name: "Jarvis"
+    tone: "professional"
+    formality: 0.8
+    humor: 0.3
+    empathy: 0.7
+
+task_planning:
+  max_steps: 10
+  thought_process: true
+  memory_context_window: 5
+
+security:
+  command_blocklist:
+    - "rm"
+    - "sudo"
+    - "chmod"
+    - "chown"
+  max_token_per_request: 4000
+  rate_limit: 60  # requests per minute
+
+scheduler:
+  timezone: "UTC"
+  min_buffer_time: 300  # 5 minutes
+  max_concurrent_tasks: 5
+
+multimodal:
+  speech:
+    input: "whisper"
+    output: "gtts"
+  image:
+    enabled: true
+    max_size: 10485760  # 10MB
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "jarvis.log"
