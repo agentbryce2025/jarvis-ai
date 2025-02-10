@@ -17,15 +17,28 @@ def check_python_version():
 def install_system_dependencies():
     """Install required system packages"""
     try:
-        subprocess.run(["sudo", "apt-get", "update"], check=True)
-        subprocess.run([
-            "sudo", "apt-get", "install", "-y",
-            "redis-server",
-            "postgresql",
-            "postgresql-contrib",
-            "python3-dev",
-            "build-essential"
-        ], check=True)
+        # Detect OS
+        if sys.platform == "darwin":  # macOS
+            # Check if Homebrew is installed
+            if subprocess.run(["which", "brew"], capture_output=True).returncode != 0:
+                print("Homebrew is required. Please install it first:")
+                print("/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"")
+                sys.exit(1)
+            
+            # Install dependencies using Homebrew
+            subprocess.run(["brew", "install", "redis"], check=True)
+            subprocess.run(["brew", "install", "postgresql@14"], check=True)
+            
+        else:  # Linux (Ubuntu)
+            subprocess.run(["sudo", "apt-get", "update"], check=True)
+            subprocess.run([
+                "sudo", "apt-get", "install", "-y",
+                "redis-server",
+                "postgresql",
+                "postgresql-contrib",
+                "python3-dev",
+                "build-essential"
+            ], check=True)
     except subprocess.CalledProcessError as e:
         print(f"Failed to install system dependencies: {e}")
         sys.exit(1)
@@ -45,24 +58,43 @@ def install_python_dependencies():
 def setup_postgresql():
     """Initialize PostgreSQL database"""
     try:
-        # Start PostgreSQL service
-        subprocess.run(["sudo", "service", "postgresql", "start"], check=True)
-        
-        # Create database and user
-        subprocess.run([
-            "sudo", "-u", "postgres", "psql",
-            "-c", "CREATE DATABASE jarvis_memory;"
-        ], check=True)
-        
-        subprocess.run([
-            "sudo", "-u", "postgres", "psql",
-            "-c", "CREATE USER jarvis WITH PASSWORD 'jarvis_password';"
-        ], check=True)
-        
-        subprocess.run([
-            "sudo", "-u", "postgres", "psql",
-            "-c", "GRANT ALL PRIVILEGES ON DATABASE jarvis_memory TO jarvis;"
-        ], check=True)
+        if sys.platform == "darwin":  # macOS
+            # Start PostgreSQL service
+            subprocess.run(["brew", "services", "start", "postgresql@14"], check=True)
+            
+            # Create database and user
+            subprocess.run([
+                "createdb", "jarvis_memory"
+            ], check=True)
+            
+            subprocess.run([
+                "psql", "postgres",
+                "-c", "CREATE USER jarvis WITH PASSWORD 'jarvis_password';"
+            ], check=True)
+            
+            subprocess.run([
+                "psql", "postgres",
+                "-c", "GRANT ALL PRIVILEGES ON DATABASE jarvis_memory TO jarvis;"
+            ], check=True)
+        else:  # Linux (Ubuntu)
+            # Start PostgreSQL service
+            subprocess.run(["sudo", "service", "postgresql", "start"], check=True)
+            
+            # Create database and user
+            subprocess.run([
+                "sudo", "-u", "postgres", "psql",
+                "-c", "CREATE DATABASE jarvis_memory;"
+            ], check=True)
+            
+            subprocess.run([
+                "sudo", "-u", "postgres", "psql",
+                "-c", "CREATE USER jarvis WITH PASSWORD 'jarvis_password';"
+            ], check=True)
+            
+            subprocess.run([
+                "sudo", "-u", "postgres", "psql",
+                "-c", "GRANT ALL PRIVILEGES ON DATABASE jarvis_memory TO jarvis;"
+            ], check=True)
     except subprocess.CalledProcessError as e:
         print(f"Failed to setup PostgreSQL: {e}")
         sys.exit(1)
@@ -70,8 +102,12 @@ def setup_postgresql():
 def setup_redis():
     """Initialize Redis"""
     try:
-        # Start Redis service
-        subprocess.run(["sudo", "service", "redis-server", "start"], check=True)
+        if sys.platform == "darwin":  # macOS
+            # Start Redis service
+            subprocess.run(["brew", "services", "start", "redis"], check=True)
+        else:  # Linux (Ubuntu)
+            # Start Redis service
+            subprocess.run(["sudo", "service", "redis-server", "start"], check=True)
         
         # Test Redis connection
         subprocess.run(["redis-cli", "ping"], check=True)
